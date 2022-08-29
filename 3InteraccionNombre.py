@@ -16,7 +16,7 @@ def main(session):
     nombres = ["fernando", "paolo", "roberto"]
     sr_service.setVocabulary(nombres,True) #False
 
-    nombre(tts_service, sr_service, memory_service, nombres)
+    nombre(tts_service, sr_service, memory_service)
     #nombrebucle(tts_service, sr_service, memory_service, nombres)
 
     sr_service.pause(False)

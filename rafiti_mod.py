@@ -23,31 +23,32 @@ def main(session):
     tts_service.say("Hola, yo soy NAO")
 
     #Sexo
-    tts_service.say("Por favor dígame ¿Cuál es su sexo: femenino, masculino u otro?")
-    
     sexos=['femenino','masculino','otro']
-    sexo_dict={'femenino':0,'masculino':1,'otro':2}
+    sexo_dict={'femenino':0,'masculino':1,'otro':2} #solo para la cortesia
 
     sr_service.setVocabulary(sexos,True)
 
-    hasSexo = False
-    while not hasSexo:
+    askSexo = True
+    while askSexo:
+        
+        tts_service.say("Por favor dígame ¿Cuál es su sexo: femenino, masculino u otro?")
 
         sr_service.subscribe("sexo_id")
         memory_service.subscribeToEvent('WordRecognized',"sexo_id",'wordRecognized')
 
         sr_service.pause(False)
-        time.sleep(10)
+        time.sleep(5)
 
         sexo=memory_service.getData("WordRecognized")[1] #? (value,pair)
 
+        sr_service.unsubscribe("sexo_id")
+        memory_service.unsubscribeToEvent('WordRecognized',"sexo_id")
+
         if sexo in sexos: 
             sexo_save = sexo_dict[sexo]
-            sr_service.unsubscribe("edad_id")
-            memory_service.unsubscribeToEvent('WordRecognized',"edad_id",'wordRecognized')
-            hasSexo = True
+            askSexo = False
         else:
-            tts_service.say("Por favor repítame ¿Cuál es su sexo: femenino, masculino u otro?")
+            tts_service.say("Disculpe, no pude entender")
 
     #Asignar cortesía
     print(sexo_save)
@@ -57,51 +58,57 @@ def main(session):
         cortesia = "Señor"
     elif sexo_save == 2:
         cortesia = "Paciente"
-        sexo_save = 1
+        sexo_save = 1 #se considera masculino
 
     #Edad
-    tts_service.say(cortesia + "¿Cuántos años tiene? ")
-
     edades=["cinco","seis","siete","ocho","nueve","diez","once","doce","trece","catorce","quince","dieciseis",\
         "diecisiete","dieciocho","diecinueve","veinte"]
     edad_dict = {edad: i+5 for i, edad in enumerate(edades)} #diccionario cadena:numero
 
     sr_service.setVocabulary(edades,True) 
 
-    hasEdad = False
-    while not hasEdad:
+    askEdad = True
+    while askEdad:
+
+        tts_service.say(cortesia + "¿Cuántos años tiene? ")
 
         sr_service.subscribe("edad_id")
         memory_service.subscribeToEvent('WordRecognized',"edad_id",'wordRecognized')
 
         sr_service.pause(False)
-        time.sleep(10)
+        time.sleep(5)
 
         edad=memory_service.getData("WordRecognized")[1] #? (value,pair)
 
+        sr_service.unsubscribe("edad_id")
+        memory_service.unsubscribeToEvent('WordRecognized',"edad_id")
+
         if edad in edades: 
             edad_save = edad_dict[edad]
-            sr_service.unsubscribe("edad_id")
-            memory_service.unsubscribeToEvent('WordRecognized',"edad_id",'wordRecognized')
-            hasEdad = True
+            askEdad = False
         else:
-            tts_service.say("Disculpe, repítame ¿Cuántos años tiene?")
+            tts_service.say("Disculpe, no pude entender")
 
     #Sintomas generales
-    sgenerales=["tos","dificultad para respirar","dolores","perdida de peso","fatiga","molestias generales", "no"]
-    sr_service.setVocabulary(sgenerales,True)
+    sgenerales=["tos","dificultad para respirar","dolores","perdida de peso","fatiga",\
+    "molestias generales"]
 
     for sg in sgenerales:
         decir_sgenerales += sg + ', '
 
     decir_sgenerales = decir_sgenerales[:-2] #sin ultima comita y espacio
+    sgenerales += ["no"] #opcion no
     
-    opcionesContinuar = ["si", "no"]
-    nuevoSintoma = True
+    intensidades = ["bajo","medio","alto"]
+    #intensidad_dict={"baja":0,"bajo":0,"media":1,"medio":1,"alta":2,"alto":2}
+    #opcionesContinuar = ["si", "no"]
+    
     mis_sgenerales = [] #? set 
     mis_sespecificos = [] #? set
-
-    while nuevoSintoma:
+    mis_intensidades = []
+    
+    askSGeneral = True
+    while askSGeneral:
 
         #Despistaje covid   
         if len(mis_sgenerales) >= 3:
@@ -109,16 +116,19 @@ def main(session):
             time.sleep(1)
             tts_service.say("Por favor, realícese una prueba de descarte")
             time.sleep(1)
-            tts_service.say("Nos vemos")
+            tts_service.say("Hasta pronto, " + cortesia)
             motion_service.rest()
             return
 
-        #Pedir síntomas
-        tts_service.say("Si presenta alguno de los siguientes síntomas repítalo")
+        #Listar síntomas generales
+        tts_service.say("Si presenta alguno de los siguientes síntomas generales repítalo")
         time.sleep(1)
         tts_service.say(decir_sgenerales) #TODO Mostrar en pantalla sintomas
         time.sleep(1)
         tts_service.say("Si no presenta ninguno de estos síntomas diga la palabra no para finalizar el proceso")
+
+        #asignar vocabulario de sintomas generales
+        sr_service.setVocabulary(sgenerales,True)
 
         sr_service.subscribe("sgeneral_id") 
         memory_service.subscribeToEvent('WordRecognized',"sgeneral_id",'wordRecognized')
@@ -129,24 +139,27 @@ def main(session):
         sgeneral=memory_service.getData("WordRecognized")[1] #? str()
         print(sgeneral)
 
+        sr_service.unsubscribe("sgeneral_id")
+        memory_service.unsubscribeToEvent('WordRecognized',"sgeneral_id")
+
         if sgeneral in sgenerales:
 
-            sr_service.unsubscribe("sgeneral_id")
-            memory_service.unsubscribeToEvent('WordRecognized',"sgeneral_id",'wordRecognized')
-
-            #Terminar todos los procesos
             if sgeneral == "no":
-                tts_service.say("Hasta pronto, " + cortesia)
-                motion_service.rest()
-                nuevoSintoma = False
-                return 
-
+                #deja de pedir sintomas generales
+                askSGeneral = False
+                #se procesan los especificos
+                if len(mis_sespecificos) == 0: #si no ha mencionado ningun sintoma esp -> se despide
+                    tts_service.say("No hay síntomas qué procesar. Hasta pronto, " + cortesia)
+                    motion_service.rest()
+                    return
+                #si ha mencionado alguno -> pasa al algoritmo
+                break 
+            
+            #Para el despistaje de covid
             mis_sgenerales.append(sgeneral)
             tts_service.say("Síntoma general "+ str(len(mis_sgenerales)) + ": " + sgeneral)
             
-            decir_sespecificos = "Si presentas alguno de estos síntomas específicos repítelo, por favor: "
-
-            #declarar sintomas especificos para el sintoma general
+            #Declarar síntomas específicos para el síntoma general
             if sgeneral =='tos':
 
                 sespecificos=['alergia','tos con mucosidad amarilla o verde todos los dias',\
@@ -171,11 +184,13 @@ def main(session):
 
             elif sgeneral =='perdida peso':
                 
-                sespecificos=['perdida de apetito', 'nauseas', 'vomitos', 'diarrea', 'perdida de peso por perdida de apetito', 'perdida de peso']
+                sespecificos=['perdida de apetito', 'nauseas', 'vomitos', 'diarrea', \
+                'perdida de peso por perdida de apetito', 'perdida de peso']
      
             elif sgeneral =='fatiga o cansancio':
                 
-                sespecificos=['fatiga', 'mal humor inusual', 'despertarse con frecuencia', 'irritabilidad']
+                sespecificos=['fatiga', 'mal humor inusual', 'despertarse con frecuencia', \
+                'irritabilidad']
 
             elif sgeneral =='molestias generales':
 
@@ -184,144 +199,88 @@ def main(session):
                 'somnolencia diurna', 'dificultades con la memoria y la concentracion', 'sudores nocturnos', 
                 'angustioso', 'dedos de manos y pies mas anchos y redondos que lo normal']
                 
-            #asignar sintomas especificos
-            sr_service.setVocabulary(sespecificos,True)
-
             for se in sespecificos:
                 decir_sespecificos += se + ', '
 
             decir_sespecificos = decir_sespecificos[:-2]
+            sespecificos += ["no"] #opcion no
             
-            hasSEspecifico=False
-            while not hasSEspecifico:
+            askSEspecifico = True
+            while askSEspecifico:
 
-                tts_service.say(decir_sespecificos)
+                #Listar síntomas especificos
+                tts_service.say("Si presenta alguno de los siguientes síntomas específicos repítalo")
+                time.sleep(1)
+                tts_service.say(decir_sespecificos) #TODO Mostrar en pantalla sintomas
+                time.sleep(1)
+                tts_service.say("Si no presenta ninguno de estos síntomas diga la palabra no para finalizar el proceso")
+
+                #asignar vocabulario de sintomas especificos
+                sr_service.setVocabulary(sespecificos,True)
 
                 sr_service.subscribe("sespecifico_id")
                 memory_service.subscribeToEvent('WordRecognized',"sespecifico_id",'wordRecognized')
                 
                 sr_service.pause(False) #?
-                time.sleep(10)
+                time.sleep(7)
 
                 sespecifico = memory_service.getData("WordRecognized")[1]
                 print(sespecifico)
 
+                sr_service.unsubscribe("sespecifico_id")
+                memory_service.unsubscribeToEvent('WordRecognized',"sespecifico_id")
+
                 if sespecifico in sespecificos :
 
-                    sr_service.unsubscribe("sespecifico_id")
-                    memory_service.unsubscribeToEvent('WordRecognized',"sespecifico_id",'wordRecognized')
+                    if sespecifico == "no":
+                        askSEspecifico = False
+                        #deja de preguntar por sintoma especifico, vuelve a preguntar por sintoma general
+                        break 
 
-                    mis_sespecificos.append(sespecifico)
+                    mis_sespecificos.append(sespecifico) #TODO solo con especificos se procesa?
                     tts_service.say("Síntoma especifico "+ str(len(mis_sespecificos)) + ": " + sespecifico)
-                    
-                    intensidades = ["baja", "bajo", "media", "medio", "alta", "alto"]
-                    mis_intensidades = []
+             
+                    askIntensidad = True
+                    while askIntensidad:
 
-                    hasIntensidad = False
-                    while not hasIntensidad:
+                        tts_service.say("¿Qué tan intenso es el síntoma? Bajo, medio o alto")
 
-                        tts_service.say("¿Con qué intensidad? Baja, alta o media")
+                        #asignar vocabulario de intesidades
+                        sr_service.setVocabulary(intensidades,True)
 
-                        sr_service.subscribe("sintensidad_id")
-                        memory_service.subscribeToEvent('WordRecognized',"sintensidad_id",'wordRecognized')
+                        sr_service.subscribe("intensidad_id")
+                        memory_service.subscribeToEvent('WordRecognized',"intensidad_id",'wordRecognized')
                         
                         sr_service.pause(False) #?
                         time.sleep(5)
 
                         intensidad =memory_service.getData("WordRecognized")[1]
 
+                        sr_service.unsubscribe("intensidad_id")
+                        memory_service.unsubscribeToEvent('WordRecognized',"intensidad_id")
+
                         if intensidad in intensidades:
-                            sr_service.unsubscribe("sintensidad_id")
-                            memory_service.unsubscribeToEvent('WordRecognized',"sintensidad_id",'wordRecognized')
 
                             mis_intensidades.append(intensidad)
                             
                             tts_service.say("Anotado")
+                            time.sleep(1)
                             tts_service.say("Síntoma " + sespecifico + "con intensidad " + sespecifico)
-                            hasIntensidad = True
+
+                            askIntensidad = False
 
                         else:
-                            tts_service.say("Por favor, repíteme") 
-
-                    """
-                    bool_answer=False
-                    while bool_answer==False:
-                        tts_service.say("Tienes mas sintomas?")
-                        tts_recognition_service.pause(False)
-                        time.sleep(5)
-                        if str(sintomas_recog[0])=='si' :
-                            tts_service.say("Te gustaria escuchar denuevo los sintomas?")
-                            tts_recognition_service.pause(False)
-                            time.sleep(5)
-                            if str(sintomas_recog[0])=='si' :
-                                tts_service.say("Los sintomas son los siguientes: alergia,tos con mucosidad amarilla o verde todos los dias,\
-                                            nariz que moquea,congestion nasal, tos amarilla, moco, tos cronica,tos seca, tos verdosa, tos con sangre,dolor de garganta,\
-                                            boca seca,tos sibilante,tos seca persistente")
-                                time.sleep(5)
-                                sintomas_recog=memory_service.getData("WordRecognized")
-                                if str(sintomas_recog[0]) in vocabulary :
-                                    sintomas.append(str(sintomas_recog[0]))
-                                    tts_service.say("Y dime cual es tu gravedad: bajo,medio,alto")
-                                    time.sleep(5)
-                                    gravedad_recog=memory_service.getData("WordRecognized")
-                                    gravedad.append(gravedad_recog[0])                                    
-
-                            elif str(sintomas_recog[0])=='no':
-                                tts_service.say('Dime tu sintoma, porfavor')
-                                time.sleep(5)
-                                sintomas_recog=memory_service.getData("WordRecognized")
-                                if str(sintomas_recog[0])in vocabulary :
-                                    sintomas.append(str(sintomas_recog[0]))
-                                    tts_service.say("Y dime cual es tu gravedad: bajo,medio,alto")
-                                    time.sleep(5)
-                                    gravedad_recog=memory_service.getData("WordRecognized")
-                                    gravedad.append(gravedad_recog[0])
-
-                        elif str(sintomas_recog[0])=='no' :
-                            tts_recognition_service.pause(False)
-                            tts_recognition_service.unsubscribe("sintoma")
-                            memory_service.unsubscribeToEvent('WordRecognized',"sintoma",'wordRecognized')
-                            bool_answer=True
-                            boolean=True
-                    """
-                    hasSEspecifico = True
+                            tts_service.say("Disculpe, no pude entender")
+                    
                 else:
                     tts_service.say("Disculpe, hagámoslo de nuevo, no pude entender") 
 
-            #Continuar escuchando?
-            tts_service.say("¿Presenta algún síntoma adicional?")
-            hasContinuar = False
-
-            #mientras no escuche la respuesta
-            while not hasContinuar:
-                sr_service.subscribe("continuar_id") 
-                memory_service.subscribeToEvent('WordRecognized',"continuar_id",'wordRecognized')
-
-                sr_service.pause(False) #
-                time.sleep(5) #
-
-                continuar=memory_service.getData("WordRecognized")[1] #str() ?
-                print(continuar)
-
-                if continuar in opcionesContinuar:
-
-                    #dejar de preguntar si continuar
-                    hasContinuar = True
-
-                    #Dejar de pedir sintomas generales
-                    if continuar == "no":
-                        tts_service.say("Hasta pronto, " + cortesia)
-                        nuevoSintoma = False
-                        break
-                    
-                else:
-                    tts_service.say("Repítame ¿Presenta algún síntoma adicional?")
-
         else:
             tts_service.say("Disculpe, hagámoslo de nuevo, no pude entender") 
-
-    #Procesar síntomas #TODO
-    algoritmo(edad_save,sexo_save, sespecificos) 
+        
+    #Procesar síntomas #TODO Mortalidad
+    tts_service.say("A continuación procesaré los síntomas. Espere por favor")
+    algoritmo(edad_save,sexo_save, mis_sespecificos, mis_intensidades)
 
     #Despedirse
     tts_service.say("Con esta información, le sugiero que contacte a un médico profesional")

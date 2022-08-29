@@ -20,7 +20,7 @@ def main(session):
     
     sr_service.setVocabulary(edades,True) # False: Busca palabra exacta True : obviar palabras o frases ejemplo: <Tengo> cinco <anios> , obviara los que contengan <>
 
-    edad(tts_service, sr_service, memory_service, edades, edad_dict)
+    edad(tts_service, sr_service, memory_service, edad_dict)
     #edadbucle(tts_service, sr_service, memory_service, edades, edad_dict)
 
     sr_service.pause(False)
