@@ -3,7 +3,7 @@ import qi
 import argparse
 import sys
 import time
-from Azure_Api import algoritmo
+from Azure_Api import procesar
 
 def main(session):
 
@@ -33,25 +33,26 @@ def main(session):
         
         tts_service.say("Por favor dígame ¿Cuál es su sexo: femenino, masculino u otro?")
 
-        sr_service.subscribe("sexo_id")
-        memory_service.subscribeToEvent('WordRecognized',"sexo_id",'wordRecognized')
+        sr_service.subscribe("sexo_id") #speechdetected?
+        memory_service.subscribeToEvent('WordRecognized',"sexo_id",'wordRecognized') #3parameters?
 
         sr_service.pause(False)
         time.sleep(5)
 
-        sexo=memory_service.getData("WordRecognized")[1] #? (value,pair)
+        sexo=memory_service.getData("WordRecognized")[0] #1era opcion d lista descendente | str()?
 
         sr_service.unsubscribe("sexo_id")
         memory_service.unsubscribeToEvent('WordRecognized',"sexo_id")
 
         if sexo in sexos: 
             sexo_save = sexo_dict[sexo]
+            tts_service.say("Recibido: sexo "+ sexo)
+            print("Sexo: " + sexo_save)
             askSexo = False
         else:
             tts_service.say("Disculpe, no pude entender")
 
     #Asignar cortesía
-    print(sexo_save)
     if sexo_save == 0:
         cortesia = "Señorita"
     elif sexo_save == 1:
@@ -78,13 +79,15 @@ def main(session):
         sr_service.pause(False)
         time.sleep(5)
 
-        edad=memory_service.getData("WordRecognized")[1] #? (value,pair)
+        edad=memory_service.getData("WordRecognized")[0] #1era opcion d lista descendente | str()? 
 
         sr_service.unsubscribe("edad_id")
         memory_service.unsubscribeToEvent('WordRecognized',"edad_id")
 
         if edad in edades: 
             edad_save = edad_dict[edad]
+            tts_service.say("Recibido: edad "+ edad + " años")
+            print("Edad: " + edad_save)
             askEdad = False
         else:
             tts_service.say("Disculpe, no pude entender")
@@ -118,6 +121,7 @@ def main(session):
             time.sleep(1)
             tts_service.say("Hasta pronto, " + cortesia)
             motion_service.rest()
+            print("Fin: Recomendación descarte covid")
             return
 
         #Listar síntomas generales
@@ -136,8 +140,7 @@ def main(session):
         sr_service.pause(False) #?
         time.sleep(7)
 
-        sgeneral=memory_service.getData("WordRecognized")[1] #? str()
-        print(sgeneral)
+        sgeneral=memory_service.getData("WordRecognized")[0] #1era opcion d lista descendente | str()?
 
         sr_service.unsubscribe("sgeneral_id")
         memory_service.unsubscribeToEvent('WordRecognized',"sgeneral_id")
@@ -147,10 +150,11 @@ def main(session):
             if sgeneral == "no":
                 #deja de pedir sintomas generales
                 askSGeneral = False
-                #se procesan los especificos
-                if len(mis_sespecificos) == 0: #si no ha mencionado ningun sintoma esp -> se despide
+                #si no hay ningun especifico para procesar
+                if len(mis_sespecificos) == 0:
                     tts_service.say("No hay síntomas qué procesar. Hasta pronto, " + cortesia)
                     motion_service.rest()
+                    print("Fin: No se ha registrado ningún síntoma específico para procesar")
                     return
                 #si ha mencionado alguno -> pasa al algoritmo
                 break 
@@ -158,6 +162,9 @@ def main(session):
             #Para el despistaje de covid
             mis_sgenerales.append(sgeneral)
             tts_service.say("Síntoma general "+ str(len(mis_sgenerales)) + ": " + sgeneral)
+
+            print("----------------------------")
+            print("Recibido: síntoma general " + sgeneral)
             
             #Declarar síntomas específicos para el síntoma general
             if sgeneral =='tos':
@@ -224,8 +231,7 @@ def main(session):
                 sr_service.pause(False) #?
                 time.sleep(7)
 
-                sespecifico = memory_service.getData("WordRecognized")[1]
-                print(sespecifico)
+                sespecifico = memory_service.getData("WordRecognized")[0] #1era opcion d lista descendente | str()?
 
                 sr_service.unsubscribe("sespecifico_id")
                 memory_service.unsubscribeToEvent('WordRecognized',"sespecifico_id")
@@ -239,6 +245,7 @@ def main(session):
 
                     mis_sespecificos.append(sespecifico) #TODO solo con especificos se procesa?
                     tts_service.say("Síntoma especifico "+ str(len(mis_sespecificos)) + ": " + sespecifico)
+                    print("Recibido: síntoma especifico " + sespecifico)
              
                     askIntensidad = True
                     while askIntensidad:
@@ -254,7 +261,8 @@ def main(session):
                         sr_service.pause(False) #?
                         time.sleep(5)
 
-                        intensidad =memory_service.getData("WordRecognized")[1]
+                        intensidad =memory_service.getData("WordRecognized")[0] #1era opcion d lista descendente | str()?
+                        print("Recibido: Intensidad " + intensidad)
 
                         sr_service.unsubscribe("intensidad_id")
                         memory_service.unsubscribeToEvent('WordRecognized',"intensidad_id")
@@ -275,12 +283,14 @@ def main(session):
                 else:
                     tts_service.say("Disculpe, hagámoslo de nuevo, no pude entender") 
 
+            print("----------------------------")
+
         else:
             tts_service.say("Disculpe, hagámoslo de nuevo, no pude entender") 
         
-    #Procesar síntomas #TODO Mortalidad
+    #Procesar síntomas y dar comentarios
     tts_service.say("A continuación procesaré los síntomas. Espere por favor")
-    algoritmo(edad_save,sexo_save, mis_sespecificos, mis_intensidades)
+    procesar(edad_save,sexo_save,mis_sespecificos,mis_intensidades,tts_service)
 
     #Despedirse
     tts_service.say("Con esta información, le sugiero que contacte a un médico profesional")

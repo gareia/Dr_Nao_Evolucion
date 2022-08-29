@@ -9,7 +9,7 @@ def nombre(tts_service, sr_service, memory_service):
     sr_service.pause(False) #
     time.sleep(5) #
     
-    nombre=memory_service.getData("WordRecognized")[1] #(value, pair)
+    nombre=memory_service.getData("WordRecognized")[0] #1era opcion d lista descendente | str()?
     print(nombre) #print(aux, "|", aux[0], "|", aux[1])
     
     sr_service.unsubscribe("nombre_id") #Deja de escribir en memoria
@@ -28,7 +28,7 @@ def nombrebucle(tts_service, sr_service, memory_service, nombres):
         sr_service.pause(False) #
         time.sleep(5) #
 
-        nombre=memory_service.getData("WordRecognized")[1] #(value, pair)
+        nombre=memory_service.getData("WordRecognized")[0] #1era opcion d lista descendente | str()?
         print(nombre)
 
         sr_service.unsubscribe("nombre_id") #Deja de escribir en memoria
@@ -49,7 +49,7 @@ def edad(tts_service, sr_service, memory_service, edad_dict):
     sr_service.pause(False) #
     time.sleep(5) #
 
-    edad=memory_service.getData("WordRecognized")[1]
+    edad=memory_service.getData("WordRecognized")[0] #1era opcion d lista descendente | str()?
     print(edad)
     edad_save = edad_dict[edad] #str() ? 
     print(edad_save)
@@ -70,7 +70,7 @@ def edadbucle(tts_service, sr_service, memory_service, edades, edad_dict):
         sr_service.pause(False) #
         time.sleep(5) #
 
-        edad=memory_service.getData("WordRecognized")[1]
+        edad=memory_service.getData("WordRecognized")[0] #1era opcion d lista descendente | str()?
         print(edad)
         edad_save = edad_dict[edad] #str() ? 
         print(edad_save)
