@@ -2,7 +2,7 @@
 from naoqi import ALProxy
 import time
 
-ip = "127.0.0.1"
+ip = "192.168.1.15" #"127.0.0.1"
 port = 9559
 tts = ALProxy("ALTextToSpeech", ip, port)
 #motion = ALProxy("ALMotion", ip, port)

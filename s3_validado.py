@@ -6,8 +6,8 @@ import qi
 import argparse
 import sys
 import time
-from funciones import nombre
-from funciones import nombrebucle
+#from funciones import nombre
+#from funciones import nombrebucle
 
 from naoqi import ALProxy
 
@@ -26,7 +26,7 @@ def main(session):
     sr_service=session.service("ALSpeechRecognition") # Reconocer sonidos en general
     memory_service=session.service("ALMemory") # Guardar en memoria los datos reconocidos
 
-    nombres = ['fernando','paolo','roberto','grecia'] #"fernando","paolo","roberto","grecia"
+    nombres = ['fernando','paolo','roberto','rafael', 'grecia'] #"fernando","paolo","roberto","grecia"
     edades = ['cinco','seis','siete','ocho',\
         'nueve','diez','once','doce','trece','catorce','quince','dieciseis','diecisiete',\
             'dieciocho','diecinueve','veinte']

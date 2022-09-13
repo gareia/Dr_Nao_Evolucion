@@ -6,7 +6,7 @@ import qi
 import argparse
 import sys
 import time
-from Azure_Api import procesar
+#from Azure_Api import procesar
 
 def main(session): #TODO session
 
@@ -74,7 +74,7 @@ def main(session): #TODO session
         cortesia = "Señor"
     elif sexo_save == 2:
         cortesia = "Paciente"
-        sexo_save = 1 #se considera masculino
+        sexo_save = 1
 
     #!--------------------------------------EDAD--------------------------------------------
     askEdad = True
@@ -95,7 +95,7 @@ def main(session): #TODO session
         edad = edad[0][6:-6] #de la palabra lo necesario
         
         if edad in edades: 
-            askSexo = False
+            askEdad = False
             tts_service.say("Recibido: edad "+ edad + " años")
             edad_save = edad_dict[edad]
             print("Edad: "+ str(edad_save) + " (" + edad + ")")
@@ -103,9 +103,9 @@ def main(session): #TODO session
             tts_service.say("Disculpe, no pude entender")
 
     #!----------------------------------DESPEDIRSE------------------------------------
-    tts_service.say("Con esta información, le sugiero que contacte a un médico profesional")
-    time.sleep(1)
-    tts_service.say("Muchas gracias por conversar conmigo")
+    ##tts_service.say("Con esta información, le sugiero que contacte a un médico profesional")
+    ##time.sleep(1)
+    ##tts_service.say("Muchas gracias por conversar conmigo")
     #motion_service.rest() #sentarse
 
 

@@ -16,7 +16,7 @@ def main(session):
 
     #time.sleep(2)
 
-    tts_service.say(10)
+    tts_service.say("10")
 
     motion_service.rest()
 

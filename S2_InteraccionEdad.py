@@ -12,20 +12,31 @@ def main(session):
     sr_service=session.service("ALSpeechRecognition") # Reconocer sonidos en general
     memory_service=session.service("ALMemory") # Guardar en memoria los datos reconocidos
 
-    tts_service.say("¿Cuántos años tienes?")
+    print("edad")
 
-    edades = ["cinco","seis","siete","ocho","nueve","diez","once","doce","trece","catorce","quince","dieciseis",\
-        "diecisiete","dieciocho","diecinueve","veinte"]
-    edad_dict = {edad: i+5 for i, edad in enumerate(edades)} #diccionario cadena-numero
+    tts_service.say("Dime tu edad") #str() ?
+    #edades=["cinco","seis","siete","ocho","nueve","diez","once","doce","trece","catorce","quince"]
+    edades = ["cinco","seis","siete","ocho","nueve","diez","once","doce","trece","catorce","quince","dieciseis","diecisiete","dieciocho","diecinueve","veinte"]
     
-    sr_service.setVocabulary(edades,True) # False: Busca palabra exacta True : obviar palabras o frases ejemplo: <Tengo> cinco <anios> , obviara los que contengan <>
+    sr_service.pause(True)
+    sr_service.setVocabulary(edades,True) #False
+    print("asignacion")
 
-    edad(tts_service, sr_service, memory_service, edad_dict)
-    #edadbucle(tts_service, sr_service, memory_service, edades, edad_dict)
+    sr_service.subscribe("edad_id") #Empieza a escribir en memoria WordRecognized, identificador
+    memory_service.subscribeToEvent('WordRecognized',"edad_id",'wordRecognized') #evento, identificador
 
     sr_service.pause(False)
-    time.sleep(2)
-    tts_service.say("Pasemos a la siguiente pregunta") 
+    time.sleep(5)
+
+    edad=memory_service.getData("WordRecognized")[0] #1era opcion d lista descendente | str()?
+    print(edad) #print(aux, "|", aux[0], "|", aux[1])
+    
+    sr_service.unsubscribe("edad_id") #Deja de escribir en memoria
+    #memory_service.unsubscribeToEvent('WordRecognized',"edad_id")#,'wordRecognized')
+
+    tts_service.say("Edad "+ edad) #str() ?
+
+
 
 
 if __name__ == "__main__":

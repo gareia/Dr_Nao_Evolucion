@@ -21,7 +21,7 @@ def main(session): #TODO session
     tts_service.setLanguage('Spanish') # Lenguaje para hablar
     sr_service.setLanguage("Spanish") # Lenguaje para reconocer voces o sonidos
     
-    tts_service.say("Hola, yo soy NAO")
+    ##tts_service.say("Hola, yo soy NAO")
 
     #!-----------------------------------VOCABULARIO---------------------------------------
     
@@ -65,7 +65,7 @@ def main(session): #TODO session
 
     intensidades = ["bajo","medio","alto"]
 
-    vocabulario = sgenerales + sespecificos + opciones + intensidades
+    vocabulario = sgenerales + opciones #+ intensidades+ sespecificos
     
     scovid = ["fiebre","tos","fatiga","falta de aliento",\
         "dificultad para respirar"] #perdida del gusto o del olfato"?
@@ -100,7 +100,7 @@ def main(session): #TODO session
         print("Sintomas generales: " + decir_sgenerales)
         tts_service.say("Si presenta alguno de los siguientes síntomas generales repítalo")
         ##time.sleep(1)
-        #print(decir_sgenerales)
+        print(decir_sgenerales)
         ##tts_service.say(decir_sgenerales)
         ##time.sleep(1)
         ##tts_service.say("Si no presenta ninguno de estos síntomas diga la palabra no para finalizar el proceso")
@@ -112,6 +112,8 @@ def main(session): #TODO session
         time.sleep(15)
         tts_service.say("ya")
         sr_service.unsubscribe("sgeneral_id")
+        
+        #sr_service.removeAllContext()
 
         #Extraer data
         sgeneral=memory_service.getData("WordRecognized")
@@ -138,7 +140,7 @@ def main(session): #TODO session
             decir_sespecificos = ''
             for se in sintomas[sgeneral]: #solo los sintomas especificos de este sintomas general
                 decir_sespecificos += se + ', '
-    #TODO: sleep entre los sintomas
+
             decir_sespecificos = decir_sespecificos[:-2] #sin ultima comita y espacio
             print("Sintomas específicos: " + decir_sespecificos)
 
@@ -166,16 +168,18 @@ def main(session): #TODO session
 
                 #Listar síntomas especificos
                 tts_service.say("Si presenta alguno de los siguientes síntomas específicos repítalo")
-                time.sleep(1)
-                tts_service.say(decir_sespecificos)
-                time.sleep(1)
-                tts_service.say("Si no presenta ninguno de estos síntomas diga la palabra no para finalizar el proceso")
+                ##time.sleep(1)
+                ##tts_service.say(decir_sespecificos)
+                ##time.sleep(1)
+                ##tts_service.say("Si no presenta ninguno de estos síntomas diga la palabra no para finalizar el proceso")
                 
                 #Escuchar
                 sr_service.subscribe("sespecifico_id")
                 memory_service.subscribeToEvent('WordRecognized',"sespecifico_id",'wordRecognized')
                 time.sleep(15)
                 sr_service.unsubscribe("sespecifico_id")
+                
+                ##sr_service.removeAllContext()
                 
                 #Extraer data
                 sespecifico = memory_service.getData("WordRecognized")
@@ -205,6 +209,8 @@ def main(session): #TODO session
                         time.sleep(10)
                         sr_service.unsubscribe("intensidad_id")
                         
+                        #sr_service.removeAllContext()
+                        
                         #Extraer data
                         intensidad =memory_service.getData("WordRecognized")
                         print(intensidad[0]+"-"+str(intensidad[1])) #palabra y probabilidad
@@ -213,10 +219,10 @@ def main(session): #TODO session
                         if intensidad in intensidades:
                             askIntensidad = False
                             mis_intensidades.append(intensidad)
-                            #tts_service.say("Anotado")
-                            #time.sleep(1)
-                            tts_service.say("Recibido. Síntoma " + sespecifico + "con intensidad " + intensidad)
-                            print("Recibido. Síntoma " + sespecifico + "con intensidad " + intensidad)
+                            tts_service.say("Anotado")
+                            time.sleep(1)
+                            tts_service.say("Recibido. Síntoma " + sespecifico + "con intensidad " + sespecifico)
+                            print("Recibido. Síntoma " + sespecifico + "con intensidad " + sespecifico)
                         else:
                             tts_service.say("Disculpe, no pude entender")
                     

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 import time
 from collections import Counter 
@@ -72,7 +73,7 @@ def alg_mortalidad(Mortalidades,tts_service):
         # Print the headers - they include the requert ID and the timestamp, which are useful for debugging the failure
         print(error.info())
         print(json.loads(error.read().decode("utf8", 'ignore')))
-  print("Nivel de mortalidad: " + str(cnt_morts)) #TODO decir?
+  print("Nivel de mortalidad: " + str(cnt_morts))
   if(cnt_morts>1):
     tts_service.say("Te sugiero que visites a un doctor urgentemente, tus síntomas no se ven nada bien.")
   else:
@@ -84,8 +85,8 @@ def procesar(Mi_Edad,Mi_Sexo,Mis_Sintomas,Mis_Gravedades,tts_service):
     Mortalidades = []
 
     for i in range(len(Mis_Sintomas)):
-      Dict = {'sintomas': Lista_Sintomas[Mis_Sintomas[i]], 'edad': Mi_Edad, 
-      'sexo': Mi_Sexo,'enfermedad': "", 'tratamiento': "", 
+      Dict = {'sintomas': Mis_Sintomas[i], 'edad': Mi_Edad,
+      'sexo': Mi_Sexo,'enfermedad': "", 'tratamiento': "",
       'gravedad': Mis_Gravedades[i],'mortalidad': ""}
       data = {
         "Inputs": {
