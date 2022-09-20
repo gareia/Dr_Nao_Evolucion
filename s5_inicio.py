@@ -20,7 +20,7 @@ def main(session):
     motion_service.rest() #sentarse
 
     tts_service.setLanguage('Spanish') # Lenguaje para hablar
-    tts_service.say("Hola, yo soy NAO")
+    tts_service.say("\\vol=50\\Hola, yo soy NAO")
 
     sr_service.setLanguage("Spanish") # Lenguaje para reconocer voces o sonidos
     sr_service.setAudioExpression(True)
@@ -80,7 +80,7 @@ def main(session):
 
     vocabulario = sexos + sgenerales + sespecificos + escape + intensidades + digitos + confirmacion
     
-    #molestias generales #tos #fatiga #dificultad para respirar 
+    #molestias generales #tos #relacionado a fatiga #dificultad para respirar 
     scovid = ["fiebre","tos","fatiga","falta de aliento",\
         "dificultad para respirar"] #perdida del gusto o del olfato"?
 
@@ -89,6 +89,8 @@ def main(session):
     sr_service.pause(False)
     print(">Vocabulario asignado")
     
+    """
+
     #!--------------------------------------SEXO--------------------------------------------
     askSexo = True
     while askSexo:
@@ -117,7 +119,7 @@ def main(session):
             tts_service.say("Disculpe, no pude entender")
 
     #!--------------------------------------EDAD--------------------------------------------
-    askEdad = True #TODO: validar edad
+    askEdad = True #TODO: confirmar edad entendida
     while askEdad:
 
         tts_service.say("¿Cuántos años tiene? ")
@@ -134,7 +136,7 @@ def main(session):
         
         if (edad_pal in digitos) and (edad_prob >= prob_aceptable): 
             if(int(edad_pal) > 120):
-                tts_service.say("Debe decir una edad dentro del rango de 0 a 120")
+                tts_service.say("\\vol=50\\Debe decir una edad dentro del rango de 0 a 120")
                 continue
 
             askEdad = False
@@ -143,7 +145,7 @@ def main(session):
             print("Edad: "+ edad_pal)
         else:
             tts_service.say("Disculpe, no pude entender")
-
+"""
     #!----------------------------------SINTOMAS GENERALES------------------------------------
 
     mis_sespecificos = [] #setish
@@ -232,12 +234,37 @@ def main(session):
                         contar_scovid += 1
                     
                     #!--------------------DESPISTAJE COVID--------------------------------
-                    if contar_scovid >= nummax_scovid: #TODO: primero preguntar si ya se hizo la prueba
-                        tts_service.say("Usted presenta por lo menos "+ str(nummax_scovid) +" síntomas de Covid")
-                        tts_service.say("Por favor, realícese una prueba de descarte")
-                        tts_service.say("Hasta pronto")
-                        print("Fin: Recomendación descarte covid")
-                        return
+                    if contar_scovid >= nummax_scovid:
+                        
+                        askPruebaCovid = True
+                        while askPruebaCovid:
+                            tts_service.say("Usted presenta por lo menos "+ str(nummax_scovid) +" síntomas de Covid")
+                            tts_service.say("¿Se ha realizado la prueba de descarte de Covid?")
+                            
+                            sr_service.subscribe("prueba_covid_id")
+                            memory_service.subscribeToEvent('WordRecognized',"prueba_covid_id",'wordRecognized')
+                            time.sleep(6)
+                            sr_service.unsubscribe("prueba_covid_id")
+                            
+                            pruebaCovid = memory_service.getData("WordRecognized")
+                            pruebaCovid_pal = pruebaCovid[0][6:-6] #de la palabra lo necesario
+                            pruebaCovid_prob = pruebaCovid[1] #probabilidad
+                            print(pruebaCovid_pal+"-"+str(pruebaCovid_prob))
+
+                            if (pruebaCovid_pal in confirmacion) and (pruebaCovid_prob >= prob_aceptable):
+                                
+                                askPruebaCovid = False
+
+                                if pruebaCovid_pal == "no":
+                                    tts_service.say("Por favor, realícese una prueba de descarte")
+                                    tts_service.say("Hasta pronto")
+                                    print("Fin: Recomendación descarte covid")
+                                    return
+
+                            else:
+                                tts_service.say("Disculpe, no pude entender")
+
+                        
                     #!--------------------------------------------------------------------
 
                     mis_sespecificos.append(sespecifico_pal)
@@ -292,7 +319,7 @@ def main(session):
 
         sr_service.subscribe("digito_id")
         memory_service.subscribeToEvent('WordRecognized',"digito_id",'wordRecognized')
-        time.sleep(4)
+        time.sleep(10)
         sr_service.unsubscribe("digito_id")
 
         dig=memory_service.getData("WordRecognized")
@@ -325,6 +352,8 @@ def main(session):
                     if confirmado_pal == "si":
                         cel += dig_pal 
 
+                        if len(cel) < 9:
+                            tts_service.say("Continúe")
                         if len(cel) == 9:
                             askCel = False #terminado, continuar el flujo
                         if len(cel) > 9:
