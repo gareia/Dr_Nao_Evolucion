@@ -1,11 +1,17 @@
 # -*- coding: utf-8 -*-
+from s5_internet import connect
+from s5_internet import createNewConnection
+from s5_internet import removeConnection
+from Azure_ApiSolo import procesar
+
 import qi
 import argparse
 import sys
 import time
-from Azure_Api import procesar
+#import pywhatkit
+import urllib2
 
-def main(session):
+def ejecutar(session, naoRed):
 
     #!--------------------------------INICIAR SERVICIOS------------------------------------
     motion_service = session.service("ALMotion")# Permite el movimiento del robot
@@ -17,7 +23,7 @@ def main(session):
     motion_service.rest() #sentarse
 
     tts_service.setLanguage('Spanish') # Lenguaje para hablar
-    tts_service.say("\\vol=50\\Hola, yo soy NAO")
+    #tts_service.say("\\vol=50\\Hola, yo soy NAO")
 
     sr_service.setLanguage("Spanish") # Lenguaje para reconocer voces o sonidos
     sr_service.setAudioExpression(True)
@@ -58,6 +64,7 @@ def main(session):
 
     sgenerales = [sg for sg in sintomas]
 
+
     decir_sgenerales = ''
     sespecificos = []
 
@@ -76,7 +83,7 @@ def main(session):
 
     vocabulario = sexos + sgenerales + sespecificos + escape + intensidades + digitos + confirmacion
     
-    #molestias generales #tos #relacionado a fatiga #dificultad para respirar 
+    #molestias generales #relacionado a respirar #relacionado a fatiga #relacionado a respirar
     scovid = ["fiebre","tos","fatiga","falta de aliento",\
         "dificultad para respirar"] #perdida del gusto o del olfato"?
 
@@ -85,6 +92,7 @@ def main(session):
     sr_service.pause(False)
     print(">Vocabulario asignado")
     
+    """
 
     #!--------------------------------------SEXO--------------------------------------------
     askSexo = True
@@ -201,7 +209,7 @@ def main(session):
 
     mis_sespecificos = [] #setish
     mis_intensidades = [] #setish
-    nummax_scovid = 3
+    nummax_scovid = 2
     contar_scovid = 0
 
     askSGeneral = True
@@ -385,6 +393,97 @@ def main(session):
     tts_service.say("A continuación procesaré los síntomas. Espere por favor")
     #procesar(edad_save,sexo_save,mis_sespecificos,mis_intensidades,tts_service)
 
+    removeConnection(naoRed)
+
+    celularRed = "Ni te atrevas 2" #
+    celularPass = "nfzm1408" #3gUbUVsXehf9eztAp39G
+    
+    if(createNewConnection(celularRed, celularRed, celularPass) != 0):
+        print("Error al agregar red")
+        return 0
+
+    time.sleep(3)
+
+    if(connect(celularRed, celularRed) != 0):
+        removeConnection(celularRed)
+        print("Error al conectarse a la red")
+        return 0
+
+    try:    
+        print("Espere por favor.. conectando con internet...\n")
+        time.sleep(7)
+        resultados, recomendacion = procesar(edad_save,sexo_save,mis_sespecificos,mis_intensidades)
+        print("resultados: "+ str(len(resultados)))
+        removeConnection(celularRed)
+
+    except urllib2.HTTPError as error: #URLError
+        removeConnection(celularRed)
+        print("The request failed with status code: " + str(error.code))
+        print(error.info())
+        #print(json.loads(error.read().decode("utf8", 'ignore')))
+
+    #volver conectar a nao
+    naoRed = "DIY_UPC" 
+    naoPass = "fablabupc7"
+
+    if(createNewConnection(naoRed, naoRed, naoPass) != 0):
+        print("Error al agregar red")
+        return 0
+
+    time.sleep(3)
+
+    if(connect(naoRed, naoRed) != 0):
+        removeConnection(naoRed)
+        print("Error al conectarse a la red")
+        return 0
+
+    print("Espere por favor.. conectando con Nao...\n")
+    time.sleep(7)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--ip", type=str, default="192.168.1.15",
+                        help="Robot IP address. On robot or Local Naoqi: use '127.0.0.1'.")
+    parser.add_argument("--port", type=int, default=9559,
+                        help="Naoqi port number")
+
+    args = parser.parse_args()
+    session = qi.Session()
+    try:
+        print("tcp://" + args.ip + ":" + str(args.port))
+        session.connect("tcp://" + args.ip + ":" + str(args.port))
+    except RuntimeError:
+        print ("Can't connect to Naoqi at ip \"" + args.ip + "\" on port " + str(args.port) +".\n"
+               "Please check your script arguments. Run with -h option for help.")
+        #sys.exit(1)
+        return 0
+
+    #!--------------------------------INICIAR SERVICIOS------------------------------------
+    motion_service = session.service("ALMotion")# Permite el movimiento del robot
+    tts_service=session.service("ALTextToSpeech") # Permite hablar al robot
+    sr_service=session.service("ALSpeechRecognition") # Reconocer sonidos en general
+    memory_service=session.service("ALMemory") # Guardar en memoria los datos reconocidos
+
+    #!-----------------------------------PRESENTARSE---------------------------------------
+    #motion_service.rest() 
+
+    tts_service.setLanguage('Spanish') 
+    #tts_service.say("\\vol=50\\Hola, yo soy NAO")
+
+    sr_service.setLanguage("Spanish") 
+    sr_service.setAudioExpression(True)
+    sr_service.setVisualExpression(True)
+    
+    print("--------------------------------------\n")
+    for enfermedad in resultados:
+        print(enfermedad[0] + " con un " + str(enfermedad[1]))
+        tts_service.say(enfermedad[0]+".")
+    print("--------------------------------------\n")
+    print(recomendacion[0])
+    tts_service.say(recomendacion[0])
+    print("--------------------------------------\n")
+
+    removeConnection(naoRed)
+    """
     #!------------------------------------CELULAR-------------------------------------
     cel = ""
     tts_service.say("Por favor, dícteme un número celular de 9 dígitos") 
@@ -448,8 +547,16 @@ def main(session):
 
     tts_service.say("El número al que mandaré los resultados y la recomendación es ")
 
+
+
     for c in cel:
         tts_service.say(c)
+
+    cel = "+51" + cel
+
+    #time.sleep(7)
+    #pywhatkit.sendwhatmsg_instantly(cel, "ProbandoEnvíoAutomáticoConPython", 20)
+
 
     #!----------------------------------DESPEDIRSE------------------------------------
     tts_service.say("Con esta información, le sugiero que contacte a un médico profesional")
@@ -458,7 +565,25 @@ def main(session):
 
 
 #!-------------------------------INICIAR PROGRAMAA------------------------------------
-if __name__ == "__main__":
+def main():
+
+    naoRed = "DIY_UPC" 
+    naoPass = "fablabupc7"
+
+    if(createNewConnection(naoRed, naoRed, naoPass) != 0):
+        print("Error al agregar red")
+        return 0
+
+    time.sleep(3)
+
+    if(connect(naoRed, naoRed) != 0):
+        removeConnection(naoRed)
+        print("Error al conectarse a la red")
+        return 0
+
+    print("Espere por favor.. conectando con Nao...\n")
+    time.sleep(7)
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--ip", type=str, default="192.168.1.15",
                         help="Robot IP address. On robot or Local Naoqi: use '127.0.0.1'.")
@@ -474,4 +599,7 @@ if __name__ == "__main__":
         print ("Can't connect to Naoqi at ip \"" + args.ip + "\" on port " + str(args.port) +".\n"
                "Please check your script arguments. Run with -h option for help.")
         sys.exit(1)
-    main(session)
+
+    ejecutar(session, naoRed)
+
+main()
