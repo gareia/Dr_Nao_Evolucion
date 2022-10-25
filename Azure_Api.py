@@ -125,7 +125,7 @@ def procesar(Mi_Edad,Mi_Sexo,Mis_Sintomas,Mis_Gravedades,tts_service):
           print(json.loads(error.read().decode("utf8", 'ignore')))
 
     #Resultados
-    print("--------------------------------------\n")
+    #print("--------------------------------------\n")
     print("RESULTADOS SUGERIDOS\n")
     
     if(len(Mis_Sintomas) == 0):
@@ -136,7 +136,7 @@ def procesar(Mi_Edad,Mi_Sexo,Mis_Sintomas,Mis_Gravedades,tts_service):
     Analisis_Enfermedades2(tts_service)
 
     #Recomendación
-    print("--------------------------------------\n")
+    #print("--------------------------------------\n")
     print("RECOMENDACION\n")
     
     if(len(Mortalidades) == 0):

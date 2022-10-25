@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
-from s5_internet import connect
-from s5_internet import createNewConnection
-from s5_internet import removeConnection
-from Azure_ApiSolo import procesar
+from _internet import connect,createNewConnection,removeConnection
+from _azureApi import procesar
 
 import qi
 import argparse
-import sys
 import time
-#import pywhatkit
 import urllib2
 
 naoRed = "DIY_UPC" 
@@ -563,6 +559,7 @@ def ejecutar():
         tts_service.say(c)
 
     cel = "+51" + cel
+    celular(cel)
 
     #time.sleep(7)
     #pywhatkit.sendwhatmsg_instantly(cel, "Mensaje a enviaaaar", 20) #Python3
@@ -572,8 +569,9 @@ def ejecutar():
     tts_service.say("Muchas gracias por conversar conmigo")
     #motion_service.rest() #sentarse
 
-
 #!-------------------------------INICIAR PROGRAMAA------------------------------------
 ejecutar()
 
 
+def celular(cel):
+    return cel

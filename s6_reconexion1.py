@@ -1,7 +1,6 @@
-from Azure_ApiSolo import procesar
-from s5_internet import connect
-from s5_internet import createNewConnection
-from s5_internet import removeConnection
+from _azureApi import procesar
+from _internet import connect,createNewConnection,removeConnection
+
 import time
 import urllib2
 #import json
@@ -9,10 +8,10 @@ import urllib2
 def main():
     
     print("--------------------------------------\n")
-    print("--------- RED CELULAR 1---------------\n")
+    print("--------- RED 1---------------\n")
 
-    celularRed = "Ni te atrevas 2" #
-    celularPass = "nfzm1408" #3gUbUVsXehf9eztAp39G
+    celularRed = "MOVISTAR_B209"#"Ni te atrevas"
+    celularPass = "3gUbUVsXehf9eztAp39G"#"nvth2041"
     
     if(createNewConnection(celularRed, celularRed, celularPass) != 0):
         print("Error al agregar red")
@@ -52,11 +51,17 @@ def main():
         print(error.info())
         #print(json.loads(error.read().decode("utf8", 'ignore')))
 
+    except urllib2.URLError as error:
+        removeConnection(celularRed)
+        print("URL ERROR")
+        #print(error.info())
+        #print(json.loads(error.read().decode("utf8", 'ignore')))
+
     print("--------------------------------------\n")
     print("--------- RED CELULAR 2---------------\n")
 
-    celularRed = "Ni te atrevas"
-    celularPass = "nvth2041"
+    celularRed = "Ni te atrevas 2" #
+    celularPass = "nfzm1408" 
 
     if(createNewConnection(celularRed, celularRed, celularPass) != 0):
         print("Error al agregar red")
@@ -97,5 +102,12 @@ def main():
         print("The request failed with status code: " + str(error.code))
         print(error.info())
         #print(json.loads(error.read().decode("utf8", 'ignore')))
+
+    except urllib2.URLError as error:
+        removeConnection(celularRed)
+        print("The request failed with status code: " + str(error.code))
+        print(error.info())
+        #print(json.loads(error.read().decode("utf8", 'ignore')))
+
 
 main()

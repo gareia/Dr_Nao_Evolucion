@@ -1,5 +1,32 @@
 # -*- coding: utf-8 -*-
 
+#print(round(0.56789,3))
+
+
+mensaje = "*holaa%0aahaa"
+print(mensaje)
+
+
+def prueba():
+    lis = [("uno",0.10),("dos",0.2),("tres",3.4)]
+    r = "holaa yo había pensado que tenías un perro"
+    return lis,r
+
+a, b = prueba()
+
+res_nombres = [i[0] for i in a]
+res_porcentajes = [round(i[1],3) for i in a]
+
+for i in res_nombres:
+    print(i)
+
+for i in res_porcentajes:
+    print(i)
+
+#print(type(a))
+#print(type(b))
+
+"""
 myset = {5, 6, 7}
 myset.add(5)
 myset.add(8)
@@ -7,7 +34,7 @@ myset.add(3)
 #for i in myset:
 #    print(i)
 print(len(myset))
-
+"""
 
 """
 for i in range(5):

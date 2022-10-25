@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from s5_internet import connect
-from s5_internet import createNewConnection
-from s5_internet import removeConnection
-from Azure_ApiSolo import procesar
+from _internet import connect
+from _internet import createNewConnection
+from _internet import removeConnection
+from _azureApi import procesar
 
 import time
 import urllib2

@@ -1,17 +1,122 @@
 # -*- coding: utf-8 -*-
-from _internet import connect
-from _internet import createNewConnection
-from _internet import removeConnection
+from _internet import connect,createNewConnection,removeConnection
 from _azureApi import procesar
 
-import qi
-import argparse
 import sys
+import qi
 import time
-#import pywhatkit
 import urllib2
+import csv
 
-def ejecutar(session, naoRed):
+print("------archivo flujo-------")
+
+naoRed = "" 
+internetRed = ""
+
+cel =""
+resultados = []
+recomendacion = []
+
+def fcelular():
+    return cel
+
+def fresultados():
+    return resultados
+
+def frecomendacion():
+    return recomendacion
+
+def conectarInternet():
+
+    global internetRed
+    #Ver archivo _auxRedes.txt
+    try:
+        pathInternetId = '_redInternetId.txt'
+        with open(pathInternetId, 'r') as file:
+            internetRed = file.read()
+            print("Red internet: "+internetRed)
+    except Exception as e:
+        raise Exception("Ocurrió un error al leer el archivo "+pathInternetId)
+
+    try:
+        pathInternetPass = '_redInternetPass.txt'
+        with open(pathInternetPass, 'r') as file:
+            celularPass = file.read()
+    except Exception as e:
+        raise Exception("Ocurrió un error al leer el archivo "+pathInternetPass)
+    
+    #!--------------------------------------------------------------------
+
+    if(createNewConnection(internetRed, internetRed, celularPass) != 0):
+        raise Exception("Error al agregar red " + internetRed)
+
+    time.sleep(3)
+
+    if(connect(internetRed, internetRed) != 0):
+        removeConnection(internetRed)
+        raise Exception("Error al conectarse a la red " + internetRed)
+
+
+def conectarNao():
+    
+    global naoRed
+    #Ver archivo _auxRedes.txt
+    try:
+        pathNaoId = '_redNaoId.txt'
+        with open(pathNaoId, 'r') as file:
+            naoRed = file.read()
+            print("Red Nao: "+naoRed)
+    except Exception:
+        raise Exception("Ocurrió un error al leer el archivo "+pathNaoId)
+    
+    try:
+        pathNaoPass = '_redNaoPass.txt'
+        with open(pathNaoPass, 'r') as file:
+            naoPass = file.read()
+    except Exception:
+        raise Exception("Ocurrió un error al leer el archivo "+pathNaoPass)
+    
+
+    if(createNewConnection(naoRed, naoRed, naoPass) != 0):
+        raise Exception("Error al agregar red "+naoRed)
+
+    time.sleep(3)
+
+    if(connect(naoRed, naoRed) != 0):
+        removeConnection(naoRed)
+        raise Exception("Error al conectarse a la red "+naoRed)
+
+    print("Espere por favor.. conectando con Nao...\n")
+
+    time.sleep(7)
+    
+    try:
+        
+        session = qi.Session()
+
+        pathNaoIp = '_redNaoIp.txt'
+        with open(pathNaoIp, 'r') as file:
+            naoIp = file.read()
+            print("Ip Nao: "+naoIp)
+
+        pathNaoPort = '_redNaoPort.txt'
+        with open(pathNaoPort , 'r') as file:
+            naoPort  = file.read()
+
+        tcpStr = "tcp://" + naoIp + ":" + str(naoPort)
+        print(tcpStr)
+        session.connect(tcpStr)
+
+    except RuntimeError:
+        raise Exception("No se puede conectar a Naoqi con ip \"" + naoIp + "\" y puerto" + str(naoPort))
+    except Exception:
+        raise Exception("Ocurrió un error inesperado al conectar con Nao")
+
+    return session
+    
+def ejecutar():
+
+    session = conectarNao()
 
     #!--------------------------------INICIAR SERVICIOS------------------------------------
     motion_service = session.service("ALMotion")# Permite el movimiento del robot
@@ -19,17 +124,16 @@ def ejecutar(session, naoRed):
     sr_service=session.service("ALSpeechRecognition") # Reconocer sonidos en general
     memory_service=session.service("ALMemory") # Guardar en memoria los datos reconocidos
 
-    #!-----------------------------------PRESENTARSE---------------------------------------
-    motion_service.rest() #sentarse
-
+    motion_service.rest() #sentarse 
     tts_service.setLanguage('Spanish') # Lenguaje para hablar
-    #tts_service.say("\\vol=50\\Hola, yo soy NAO")
-    print("Hola")
     sr_service.setLanguage("Spanish") # Lenguaje para reconocer voces o sonidos
     sr_service.setAudioExpression(True)
     sr_service.setVisualExpression(True)
-
     #!-----------------------------------VOCABULARIO---------------------------------------
+
+    tts_service.setVolume(0.3)#Disminuir el volumen a la mitad \\vol=30\\
+    tts_service.setParameter("speed",200) #50-400 default=100
+    tts_service.say("Hola, yo soy NAO") 
 
     prob_aceptable = 0.4 
 
@@ -39,8 +143,9 @@ def ejecutar(session, naoRed):
     escape = ["no"]
     confirmacion = ["si", "no"]
 
+    #En minúsculas
     sintomas={}
-    sintomas["tos"] = ['tos','tos amarilla','tos crónica','tos seca','tos verdosa',\
+    sintomas["relacionado a tos"] = ['tos','tos amarilla','tos crónica','tos seca','tos verdosa',\
                     'tos con sangre','tos sibilante','tos seca persistente',\
                     'tos con mucosidad amarilla o verde todos los días','boca seca',
                     'congestión nasal','naríz que moquea','moco','alergia']
@@ -64,7 +169,6 @@ def ejecutar(session, naoRed):
 
     sgenerales = [sg for sg in sintomas]
 
-
     decir_sgenerales = ''
     sespecificos = []
 
@@ -81,26 +185,105 @@ def ejecutar(session, naoRed):
     for d in range(1000):
         digitos.append(str(d))
 
-    vocabulario = sexos + sgenerales + sespecificos + escape + intensidades + digitos + confirmacion
-    
-    #molestias generales #relacionado a respirar #relacionado a fatiga #relacionado a respirar
-    scovid = ["fiebre","tos","fatiga","falta de aliento",\
-        "dificultad para respirar"] #perdida del gusto o del olfato"?
+    #nummax_digito = 10
+    #for d1 in range(nummax_digito):
+        #for d2 in range(nummax_digito):
+        #    for d3 in range(nummax_digito):
+        #        digitos.append(str(d1)+" "+str(d2)+" "+str(d3))
+
+    #print(len(digitos))
+
+    csvfile = "_nombresComunes.csv" 
+    nombres = []
+    try:
+        
+        with open(csvfile) as f:
+            names_csv = csv.reader(f)
+            for row in names_csv:
+                nombres.append(row[0])
+            
+    except FileNotFoundError:
+        raise Exception("No se ha encontrado el archivo llamado " + csvfile)
+    except Exception:
+        raise Exception("Ha ocurrido un error al cargar los nombres")
+
+    vocabulario = nombres + sexos + sgenerales + sespecificos + escape + intensidades + digitos + confirmacion
+
+    print("len(vocabulario): " + str(len(vocabulario)))
 
     sr_service.pause(True)
     sr_service.setVocabulary(vocabulario,True)
     sr_service.pause(False)
     print(">Vocabulario asignado")
-    
-    """
 
+    #ver archivo _auxSintomasCovid.txt
+    scovid = ["fiebre","tos","fatiga","falta de aliento",\
+        "dificultad para respirar"] #perdida del gusto o del olfato"?
+
+    """
+    #!--------------------------------------NOMBRE--------------------------------------------
+    askNombre = True
+    while askNombre:
+        
+        tts_service.say("\\vol=50\\¿Cuál es su nombre?") 
+
+        sr_service.subscribe("nombre_id") 
+        memory_service.subscribeToEvent('WordRecognized',"nombre_id",'wordRecognized')
+        time.sleep(6)
+        sr_service.unsubscribe("nombre_id")
+
+        nombre=memory_service.getData("WordRecognized")
+        nombre_pal = nombre[0][6:-6] #de la palabra lo necesario
+        nombre_prob = nombre[1] #probabilidad
+        print(nombre_pal+"-"+str(nombre_prob)) 
+        
+        if (nombre_pal in nombres) and (nombre_prob >= prob_aceptable): 
+
+            askNombre = False
+            tts_service.say("Hola, "+ nombre_pal)
+            print("Nombre: "+ nombre_pal)
+
+            ""
+            askConfirmacion = True
+            while askConfirmacion:
+
+                print("¿ Ha dicho " + nombre_pal + " ?")
+                tts_service.say("¿ Ha dicho " + nombre_pal + " ?")
+
+                sr_service.subscribe("confirmacion_id") 
+                memory_service.subscribeToEvent('WordRecognized',"confirmacion_id",'wordRecognized')
+                time.sleep(5)
+                sr_service.unsubscribe("confirmacion_id")
+
+                confirmado=memory_service.getData("WordRecognized")
+                confirmado_pal = confirmado[0][6:-6] #de la palabra lo necesario
+                confirmado_prob = confirmado[1] #probabilidad
+                print(confirmado_pal+"-"+str(confirmado_prob))
+
+                if (confirmado_pal in confirmacion) and (confirmado_prob >= prob_aceptable):
+
+                    askConfirmacion = False
+
+                    if confirmado_pal == "si":
+                        askNombre = False
+                        tts_service.say("Hola, "+ nombre_pal)
+                        print("Nombre: "+ nombre_pal)
+
+                    else: #no -> volver a pedir sexo
+                        tts_service.say("Disculpe, entendí mal. Repítame")
+
+                else:
+                    tts_service.say("Disculpe, no pude entender")
+            ""
+        else:
+            tts_service.say("Disculpe, no entendí")
+    
     #!--------------------------------------SEXO--------------------------------------------
     askSexo = True
     while askSexo:
         
         tts_service.say("¿Cuál es su sexo biológico?") 
         tts_service.say("Femenino. O. Masculino.")
-        #tts_service.say("o") #tts_service.say("masculino")
 
         sr_service.subscribe("sexo_id") 
         memory_service.subscribeToEvent('WordRecognized',"sexo_id",'wordRecognized')
@@ -114,6 +297,12 @@ def ejecutar(session, naoRed):
         
         if (sexo_pal in sexos) and (sexo_prob >= prob_aceptable): 
 
+            askSexo = False
+            tts_service.say("Recibido: sexo "+ sexo_pal)
+            sexo_save = sexo_dict[sexo_pal]
+            print("Sexo: "+ str(sexo_save) + "( " + sexo_pal + ")")
+
+            ""
             askConfirmacion = True
             while askConfirmacion:
 
@@ -145,7 +334,7 @@ def ejecutar(session, naoRed):
 
                 else:
                     tts_service.say("Disculpe, no pude entender")
-        
+            ""
         else:
             tts_service.say("Disculpe, no pude entender")
 
@@ -167,6 +356,15 @@ def ejecutar(session, naoRed):
         
         if (edad_pal in digitos) and (edad_prob >= prob_aceptable): 
 
+            if(int(edad_pal) > 120):
+                tts_service.say("Debe decir una edad dentro del rango de 0 a 120")
+                continue #pasa a la sgte iteración (vuelve a pedir la edad)
+            askEdad = False
+            tts_service.say("Recibido: edad "+ edad_pal + " años")
+            edad_save = int(edad_pal)#edad_dict[edad_pal]
+            print("Edad: "+ edad_pal)
+
+            ""
             askConfirmacion = True
             while askConfirmacion:
 
@@ -185,30 +383,28 @@ def ejecutar(session, naoRed):
 
                 if (confirmado_pal in confirmacion) and (confirmado_prob >= prob_aceptable):
 
-                    askConfirmacion = False
+                    askConfirmacion = False #deja de pedir confirmacion
 
                     if confirmado_pal == "si":
                         if(int(edad_pal) > 120):
                             tts_service.say("Debe decir una edad dentro del rango de 0 a 120")
-                            continue
-
+                            continue #pasa a la sgte iteración (vuelve a pedir la edad)
                         askEdad = False
                         tts_service.say("Recibido: edad "+ edad_pal + " años")
                         edad_save = int(edad_pal)#edad_dict[edad_pal]
                         print("Edad: "+ edad_pal)
                     else: #no -> volver a pedir edad
                         tts_service.say("Disculpe, entendí mal. Repítame")
-
                 else:
                     tts_service.say("Disculpe, no pude entender")
-
+            ""         
         else:
             tts_service.say("Disculpe, no pude entender")
-
+    
     #!----------------------------------SINTOMAS GENERALES------------------------------------
 
-    mis_sespecificos = [] #setish
-    mis_intensidades = [] #setish
+    mis_sespecificos = [] 
+    mis_intensidades = [] 
     nummax_scovid = 2
     contar_scovid = 0
 
@@ -218,7 +414,7 @@ def ejecutar(session, naoRed):
         print("Sintomas generales: " + decir_sgenerales)
         tts_service.say("Si presenta alguno de los siguientes síntomas generales repítalo")
         ##time.sleep(1)
-        ##tts_service.say(decir_sgenerales)
+        ##tts_service.say(decir_sgenerales) #TODO descomentar los síntomas
         ##time.sleep(1)
         tts_service.say("Si no presenta ninguno de estos síntomas diga la palabra no para continuar")
 
@@ -239,8 +435,7 @@ def ejecutar(session, naoRed):
                 #si no hay ningun especifico para procesar -> adiós
                 if len(mis_sespecificos) == 0:
                     tts_service.say("No hay síntomas qué procesar. Hasta pronto")
-                    print("Fin: No hay síntomas qué procesar. Hasta pronto")
-                    return
+                    sys.exit("Fin: No hay síntomas qué procesar. Hasta pronto")
                 #si ha mencionado alguno -> pasa al algoritmo
                 break 
             
@@ -263,7 +458,7 @@ def ejecutar(session, naoRed):
                 
                 tts_service.say("Si presenta alguno de los siguientes síntomas específicos repítalo")
                 ##time.sleep(1)
-                ##tts_service.say(decir_sespecificos)
+                ##tts_service.say(decir_sespecificos) #TODO descomentar los síntomas
                 ##time.sleep(1)
                 tts_service.say("Si no presenta ninguno de estos síntomas diga la palabra no para continuar")
                 
@@ -280,6 +475,14 @@ def ejecutar(session, naoRed):
                 if (sespecifico_pal in admitir_sespecificos) and (sespecifico_prob >= prob_aceptable):
 
                     askConfirmacion = True
+
+                    if sespecifico_pal == "no":
+                        askConfirmacion = False
+                        askSEspecifico = False
+                        #deja de preguntar por sintoma especifico, vuelve a preguntar por sintoma general
+                        tts_service.say("Okey Volvamos a los síntomas generales")
+                        break 
+
                     while askConfirmacion:
 
                         print("¿ Ha dicho " + sespecifico_pal + " ?")
@@ -300,22 +503,15 @@ def ejecutar(session, naoRed):
                             askConfirmacion = False
 
                             if confirmado_pal == "si":
-
-                                if sespecifico_pal == "no":
-                                    askSEspecifico = False
-                                    #deja de preguntar por sintoma especifico, vuelve a preguntar por sintoma general
-                                    tts_service.say("Okey Volvamos a los síntomas generales")
-                                    break 
-                                
                                 if sespecifico_pal in mis_sespecificos:
                                     tts_service.say("Este síntoma ya ha sido registrado.")
-                                    continue
+                                    continue #pasa a la sgte iteración (vuelve el sintoma)
 
                                 if sespecifico_pal in scovid:
                                     contar_scovid += 1
                                 
                                 #!--------------------DESPISTAJE COVID--------------------------------
-                                if contar_scovid >= nummax_scovid:
+                                if contar_scovid >= nummax_scovid: #si supera el límite d síntomas similares de covid
                                     
                                     askPruebaCovid = True
                                     while askPruebaCovid:
@@ -339,12 +535,10 @@ def ejecutar(session, naoRed):
                                             if pruebaCovid_pal == "no":
                                                 tts_service.say("Por favor, realícese una prueba de descarte")
                                                 tts_service.say("Hasta pronto")
-                                                print("Fin: Recomendación descarte covid")
-                                                return
-
+                                                sys.exit("Fin: Recomendación descarte covid")
+                                            #else -> continua pidiendo la intensidad del síntoma mencionado
                                         else:
                                             tts_service.say("Disculpe, no pude entender")
-
                                 #!--------------------------------------------------------------------
 
                                 mis_sespecificos.append(sespecifico_pal)
@@ -388,74 +582,61 @@ def ejecutar(session, naoRed):
 
         else:
             tts_service.say("Disculpe, hagámoslo de nuevo, no pude entender") 
-        
+    """
+
+    sexo_save = 1 #fem: 0 | masc:1
+    edad_save = 23
+    mis_sespecificos = ['tos amarilla','moco']
+    mis_intensidades = ["bajo", "alto"]
+
     #!--------------------------RESULTADOS Y RECOMENDACION------------------------------
-    tts_service.say("A continuación procesaré los síntomas. Espere por favor")
-    #procesar(edad_save,sexo_save,mis_sespecificos,mis_intensidades,tts_service)
+    tts_service.say("A continuación procesaré los síntomas. Espere por favor") 
 
     removeConnection(naoRed)
 
-    celularRed = "Ni te atrevas 2" #
-    celularPass = "nfzm1408" #3gUbUVsXehf9eztAp39G
-    
-    if(createNewConnection(celularRed, celularRed, celularPass) != 0):
-        print("Error al agregar red")
-        return 0
+    conectarInternet()
 
-    time.sleep(3)
+    try:
+        str_sct = ""
+        for me in mis_sespecificos:
+            str_sct += me + " "
+        print("Con tilde: "+str_sct)
 
-    if(connect(celularRed, celularRed) != 0):
-        removeConnection(celularRed)
-        print("Error al conectarse a la red")
-        return 0
+        mis_sespecificos_stilde = []
+        for me in mis_sespecificos:
+            nuevome = me.replace("á","a")
+            nuevome = me.replace("é","e")
+            nuevome = me.replace("í","i")
+            nuevome = me.replace("ó","o")
+            nuevome = me.replace("ú","u")
+            mis_sespecificos_stilde.append(nuevome) 
 
-    try:    
+        str_sst = ""
+        for me in mis_sespecificos_stilde:
+            str_sst += me + " "
+        print("Sin tilde: "+str_sst)
+
         print("Espere por favor.. conectando con internet...\n")
         time.sleep(7)
-        resultados, recomendacion = procesar(edad_save,sexo_save,mis_sespecificos,mis_intensidades)
-        print("resultados: "+ str(len(resultados)))
-        removeConnection(celularRed)
+        global resultados, recomendacion
+        resultados, recomendacion = procesar(edad_save,sexo_save,mis_sespecificos_stilde,mis_intensidades)
+        #resultados= [("enfermedad pulmonar obstructiva cronica",0.949),("neumonia",0.408),("influenza",0.113),("bronquitis",0.102),("hipertension pulmonar",0.06)]
+        #recomendacion = ["Te sugiero que visites a un doctor para obtener mas informacion sobre tus sintomas"]
+        removeConnection(internetRed)
 
-    except urllib2.HTTPError as error: #URLError
-        removeConnection(celularRed)
-        print("The request failed with status code: " + str(error.code))
-        print(error.info())
-        #print(json.loads(error.read().decode("utf8", 'ignore')))
+    except urllib2.HTTPError as error:
+        removeConnection(internetRed)
+        raise Exception("Http Error con código: " + str(error.code) + " | Info: " + error.info())
 
-    #volver conectar a nao
-    naoRed = "DIY_UPC" 
-    naoPass = "fablabupc7"
+    except urllib2.URLError as error:
+        removeConnection(internetRed)
+        raise Exception("Url Error")
 
-    if(createNewConnection(naoRed, naoRed, naoPass) != 0):
-        print("Error al agregar red")
-        return 0
+    except Exception:
+        raise Exception("Ocurrió un error inesperado al procesar los datos")
 
-    time.sleep(3)
-
-    if(connect(naoRed, naoRed) != 0):
-        removeConnection(naoRed)
-        print("Error al conectarse a la red")
-        return 0
-
-    print("Espere por favor.. conectando con Nao...\n")
-    time.sleep(7)
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--ip", type=str, default="192.168.1.15",
-                        help="Robot IP address. On robot or Local Naoqi: use '127.0.0.1'.")
-    parser.add_argument("--port", type=int, default=9559,
-                        help="Naoqi port number")
-
-    args = parser.parse_args()
-    session = qi.Session()
-    try:
-        print("tcp://" + args.ip + ":" + str(args.port))
-        session.connect("tcp://" + args.ip + ":" + str(args.port))
-    except RuntimeError:
-        print ("Can't connect to Naoqi at ip \"" + args.ip + "\" on port " + str(args.port) +".\n"
-               "Please check your script arguments. Run with -h option for help.")
-        #sys.exit(1)
-        return 0
+    session = conectarNao()
+    #if session == 0: return 0
 
     #!--------------------------------INICIAR SERVICIOS------------------------------------
     motion_service = session.service("ALMotion")# Permite el movimiento del robot
@@ -463,16 +644,14 @@ def ejecutar(session, naoRed):
     sr_service=session.service("ALSpeechRecognition") # Reconocer sonidos en general
     memory_service=session.service("ALMemory") # Guardar en memoria los datos reconocidos
 
-    #!-----------------------------------PRESENTARSE---------------------------------------
-    #motion_service.rest() 
-
     tts_service.setLanguage('Spanish') 
-    #tts_service.say("\\vol=50\\Hola, yo soy NAO")
 
     sr_service.setLanguage("Spanish") 
     sr_service.setAudioExpression(True)
     sr_service.setVisualExpression(True)
     
+    tts_service.say("\\vol=50\\Los resultados son")
+
     print("--------------------------------------\n")
     for enfermedad in resultados:
         print(enfermedad[0] + " con un " + str(enfermedad[1]))
@@ -481,13 +660,14 @@ def ejecutar(session, naoRed):
     print(recomendacion[0])
     tts_service.say(recomendacion[0])
     print("--------------------------------------\n")
-
-    removeConnection(naoRed)
-    """
+    
     #!------------------------------------CELULAR-------------------------------------
-    cel = ""
-    tts_service.say("Por favor, dícteme un número celular de 9 dígitos") 
+    
+    global cel
+    #cel = "949252410" #TODO
 
+    tts_service.say("Por favor, dícteme un número celular de 9 dígitos") 
+    
     askCel = True
     while askCel:
 
@@ -526,17 +706,23 @@ def ejecutar(session, naoRed):
 
                     askConfirmacion = False
 
-                    if confirmado_pal == "si":
-                        cel += num_pal 
+                    if confirmado_pal == "si": #una vez confirmado el número escuchado
+                        
+                        if len(cel) == 0 and num_pal[0] != str(9):
+                            tts_service.say("El número celular debe comenzar con 9")
+                            continue #pasa a la sgte iteración (vuelve a pedir el digito)
+                        
+                        num_pal.replace(" ","")
+                        cel += num_pal #concatenamos
 
-                        if len(cel) < 9:
-                            tts_service.say("Continúe")
+                        if len(cel) < 9: 
+                            tts_service.say("Continúe") #siga dictando
                         if len(cel) == 9:
                             askCel = False #terminado, continuar el flujo
                         if len(cel) > 9:
-                            cel = ""
+                            cel = "" #volver a empezar
                             tts_service.say("El número celular tiene más de 9 dígitos")
-                            tts_service.say("Volvamos a empezar")
+                            tts_service.say("Volvamos a empezar") 
 
                     else: #no -> volver a pedir numero
                         tts_service.say("Disculpe, entendí mal. Repítame")
@@ -547,59 +733,17 @@ def ejecutar(session, naoRed):
 
     tts_service.say("El número al que mandaré los resultados y la recomendación es ")
 
-
-
     for c in cel:
         tts_service.say(c)
 
     cel = "+51" + cel
 
-    #time.sleep(7)
-    #pywhatkit.sendwhatmsg_instantly(cel, "ProbandoEnvíoAutomáticoConPython", 20)
-
-
     #!----------------------------------DESPEDIRSE------------------------------------
-    tts_service.say("Con esta información, le sugiero que contacte a un médico profesional")
-    tts_service.say("Muchas gracias por conversar conmigo")
-    #motion_service.rest() #sentarse
-
+    tts_service.say("Se le estará enviando un watsap. Muchas gracias por conversar conmigo")
+    motion_service.rest() #sentarse
+    removeConnection(naoRed)
 
 #!-------------------------------INICIAR PROGRAMAA------------------------------------
-def main():
+ejecutar()
 
-    naoRed = "DIY_UPC" 
-    naoPass = "fablabupc7"
 
-    if(createNewConnection(naoRed, naoRed, naoPass) != 0):
-        print("Error al agregar red")
-        return 0
-
-    time.sleep(3)
-
-    if(connect(naoRed, naoRed) != 0):
-        removeConnection(naoRed)
-        print("Error al conectarse a la red")
-        return 0
-
-    print("Espere por favor.. conectando con Nao...\n")
-    time.sleep(7)
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--ip", type=str, default="192.168.1.13",
-                        help="Robot IP address. On robot or Local Naoqi: use '127.0.0.1'.")
-    parser.add_argument("--port", type=int, default=9559,
-                        help="Naoqi port number")
-
-    args = parser.parse_args()
-    session = qi.Session()
-    try:
-        print("tcp://" + args.ip + ":" + str(args.port))
-        session.connect("tcp://" + args.ip + ":" + str(args.port))
-    except RuntimeError:
-        print ("Can't connect to Naoqi at ip \"" + args.ip + "\" on port " + str(args.port) +".\n"
-               "Please check your script arguments. Run with -h option for help.")
-        sys.exit(1)
-
-    ejecutar(session, naoRed)
-
-main()

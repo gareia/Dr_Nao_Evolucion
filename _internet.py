@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 
 def createNewConnection(name, SSID, password):

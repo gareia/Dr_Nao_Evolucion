@@ -5,9 +5,9 @@ import qi
 import time
 import os
 
-from s5_internet import connect
-from s5_internet import createNewConnection
-from Azure_ApiSolo import procesar
+from _internet import connect
+from _internet import createNewConnection
+from _azureApi import procesar
 
 def main(session):
     
