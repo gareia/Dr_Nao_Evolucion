@@ -4,40 +4,6 @@ import time
 import sys
 from _internet import connect,createNewConnection,removeConnection
 
-"""
-try:
-    pathInternetId = '_redInternetId.txt'
-    with open(pathInternetId, 'r') as file:
-        internetRed = file.read()
-        print("Red internet: "+internetRed)
-
-    pathInternetPass = '_redInternetPass.txt'
-    with open(pathInternetPass, 'r') as file:
-        celularPass = file.read()
-
-    if(createNewConnection(internetRed, internetRed, celularPass) != 0):
-        raise Exception("Error al agregar red " + internetRed)
-
-    time.sleep(3)
-
-    if(connect(internetRed, internetRed) != 0):
-        removeConnection(internetRed)
-        raise Exception("Error al conectarse a la red " + internetRed)
-    
-    time.sleep(1)
-    os.system("python3 -m pip install --upgrade pip")
-    
-    time.sleep(1)
-    os.system("python3 -m pip install glob2")
-
-    import glob
-    for f in glob.glob("*.xml"):
-        os.remove(f)
-
-except Exception as e:
-    sys.exit("Ocurrió un error inesperado al eliminar los archivos .xml")
-"""
-
 def removeXmls():
     try:
         dir = os.path.dirname(os.path.realpath(__file__))

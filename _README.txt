@@ -10,14 +10,16 @@ REQUISITOS: (Guiarse de _ejemploPath.png)
 
 FUNCIONAMIENTO:
 1.Cambiar credenciales de internet en _redInternetId.txt y _redInternetPass.txt
-1.Cambiar credenciales del Nao en _redNaoId.txt y _redNaoPass.txt
-1.Cambiar path a la carpeta user data de Chrome en _chromeUserData.txt
-2.Asegurarse que las redes estén disponibles
-3.Asegurarse que la sesión de Whatsapp web esté abierta
-4.En el archivo _main.py
+2.Cambiar credenciales de la red del laboratorio en _redNaoId.txt y _redNaoPass.txt
+3.Cambiar credenciales del robot en _redNaoIp.txt y _redInternetPass.txt
+4.Cambiar urls de azure api en _azureApi.py
+5.Cambiar path a la carpeta user data de Chrome en _chromeUserData.txt
+6.Asegurarse que las redes estén disponibles
+7.Asegurarse que la sesión de Whatsapp web esté abierta
+8.En el archivo _main.py
  | Con Nao: Solo descomentar comentario debajo de "Entorno CON NAO"
  | Sin Nao: Solo descomentar comentario debajo de "Entorno SIN NAO"
-5.Correr el archivo _main.py con Python 2.7 (python _main.py)
+9.Correr el archivo _main.py con Python 2.7 (python _main.py)
 
 ATENCIÓN:
 1.Tareas programadas pueden impedir el envío a Whatsapp por el cambio de focus
