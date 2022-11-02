@@ -7,8 +7,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
-import argparse
 import time
+import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--celular", type=str)
@@ -58,7 +58,7 @@ try:
     wait = WebDriverWait(driver,100).until(
         EC.presence_of_element_located((By.CSS_SELECTOR, "button[aria-label='Enviar']"))).send_keys(Keys.RETURN)#
     print("Mensaje enviado")
-    time.sleep(2)
+    time.sleep(15)
 except Exception:
     driver.quit()
     raise Exception("No se pudo enviar el mensaje")

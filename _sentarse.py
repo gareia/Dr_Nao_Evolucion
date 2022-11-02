@@ -15,12 +15,19 @@ def main(session):
     #tts_service.setLanguage('Spanish')
     #tts_service.say("Hola") #, yo soy NAO. A continuación haremos algunas pruebas")#Pedir nombre de usuario
     #sr_service.setLanguage("Spanish") # Lenguaje para reconocer voces o sonidos
-    sr_service.setAudioExpression(True)
-    sr_service.setVisualExpression(True)
-    sr_service.pause(True)
-    sr_service.setVocabulary(["rafael","mateo","lucas"],True)
-    sr_service.pause(False)
-    print("vocabulario asignado")
+    
+    #tts_service.say("Hola, yo soy NAO") 
+
+    #sr_service.pause(True)
+    #sr_service.setVocabulary(["rafael","mateo","lucas"],True)
+    #tts_service.setVolume(0.3)#Disminuir el volumen a la mitad \\vol=30\\
+    #tts_service.setParameter("speed",150) #50-400 default=100
+    #sr_service.setAudioExpression(True)
+    #sr_service.setVisualExpression(True)
+    #sr_service.pause(False)
+    #print("vocabulario asignado")
+
+    #tts_service.say("Hola, yo soy NAO") 
 
     #motion_service.wakeUp()
     #motion_service.moveInit()
@@ -33,20 +40,24 @@ def main(session):
     sys.exit()
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--ip", type=str, default="192.168.1.13",
-                        help="Robot IP address. On robot or Local Naoqi: use '127.0.0.1'.")
-    parser.add_argument("--port", type=int, default=9559,
-                        help="Naoqi port number")
-
-    args = parser.parse_args()
+try:
     session = qi.Session()
-    try:
-        print("tcp://" + args.ip + ":" + str(args.port))
-        session.connect("tcp://" + args.ip + ":" + str(args.port))
-    except RuntimeError:
-        print ("Can't connect to Naoqi at ip \"" + args.ip + "\" on port " + str(args.port) +".\n"
-               "Please check your script arguments. Run with -h option for help.")
-        sys.exit()
+
+    pathNaoIp = '_redNaoIp.txt'
+    with open(pathNaoIp, 'r') as file:
+        naoIp = file.read()
+        print("Ip Nao: "+naoIp)
+
+    pathNaoPort = '_redNaoPort.txt'
+    with open(pathNaoPort , 'r') as file:
+        naoPort  = file.read()
+
+    tcpStr = "tcp://" + naoIp + ":" + str(naoPort)
+    print(tcpStr)
+    session.connect(tcpStr)
     main(session)
+
+except RuntimeError:
+    raise Exception("No se puede conectar a Naoqi con ip \"" + naoIp + "\" y puerto" + str(naoPort))
+except Exception:
+    raise Exception("Ocurrió un error inesperado al conectar con Nao")

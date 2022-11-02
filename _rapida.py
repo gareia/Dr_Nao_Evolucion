@@ -1,27 +1,32 @@
 # -*- coding: utf-8 -*-
 
 #print(round(0.56789,3))
+import os
 
+dir = os.path.dirname(os.path.realpath(__file__))
+print("Directorio actual: " + dir)
+for f in os.listdir(dir):
+    if(f[-4:] == ".xml"): 
+        os.remove(os.path.join(dir, f))
 
 mensaje = "*holaa%0aahaa"
-print(mensaje)
-
+#print(mensaje)
 
 def prueba():
     lis = [("uno",0.10),("dos",0.2),("tres",3.4)]
     r = "holaa yo había pensado que tenías un perro"
     return lis,r
 
-a, b = prueba()
+#a, b = prueba()
 
-res_nombres = [i[0] for i in a]
-res_porcentajes = [round(i[1],3) for i in a]
+#res_nombres = [i[0] for i in a]
+#res_porcentajes = [round(i[1],3) for i in a]
 
-for i in res_nombres:
-    print(i)
+#for i in res_nombres:
+#    print(i)
 
-for i in res_porcentajes:
-    print(i)
+#for i in res_porcentajes:
+#    print(i)
 
 #print(type(a))
 #print(type(b))

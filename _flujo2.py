@@ -2,9 +2,9 @@
 from _internet import connect,createNewConnection,removeConnection
 from _azureApi import procesar
 
-import sys #sys.exit("Ocurrió un error")
-import qi #para crear la sesión
-import time #time.sleep(5)
+import sys
+import qi
+import time
 import urllib2
 import csv
 
@@ -557,6 +557,10 @@ def ejecutar():
     except urllib2.HTTPError as error:
         removeConnection(internetRed)
         raise Exception("Http Error con código: " + str(error.code) + " | Info: " + error.info())
+
+    except urllib2.URLError as error:
+        removeConnection(internetRed)
+        raise Exception("Url Error")
 
     except Exception:
         raise Exception("Ocurrió un error inesperado al procesar los datos")

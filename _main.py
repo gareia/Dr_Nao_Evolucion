@@ -4,6 +4,7 @@ import time
 import sys
 from _internet import connect,createNewConnection,removeConnection
 
+"""
 try:
     pathInternetId = '_redInternetId.txt'
     with open(pathInternetId, 'r') as file:
@@ -35,14 +36,30 @@ try:
 
 except Exception as e:
     sys.exit("Ocurrió un error inesperado al eliminar los archivos .xml")
+"""
+
+def removeXmls():
+    try:
+        dir = os.path.dirname(os.path.realpath(__file__))
+        print("Directorio actual: " + dir)
+        for f in os.listdir(dir):
+            if(f[-4:] == ".xml"): 
+                xml = os.path.join(dir, f)
+                os.remove(xml)
+                print("Xml removido: " + xml)
+
+    except Exception:
+        raise Exception("Ocurrió un error al momento de eliminar los archivos .xml")
 
 try:
     
+    removeXmls()
+
     #Entorno CON NAO
-    #from _flujo import fcelular, fresultados, frecomendacion
+    from _flujo import fcelular, fresultados, frecomendacion
 
     #Entorno SIN NAO
-    from _simulacionNao import fcelular, fresultados, frecomendacion
+    #from _simulacionNao import fcelular, fresultados, frecomendacion
 
     print("------archivo main-------")
 
@@ -67,7 +84,7 @@ try:
     print(rec_str)
     
 except Exception as e:
-    sys.exit("Ocurrió un error inesperado con los datos de entrada: "+ e.message)
+    sys.exit("Ocurrió un error inesperado en el archivo flujo.py: "+ e.message)
 
 try:
     pathInternetId = '_redInternetId.txt'
@@ -89,6 +106,8 @@ try:
         raise Exception("Error al conectarse a la red " + internetRed)
     
     time.sleep(1)
+    os.system("python3 -m pip install --upgrade pip")
+    time.sleep(1)
     os.system("python3 -m pip install selenium")
     time.sleep(1)
     os.system("python3 -m pip install packaging")
@@ -97,9 +116,14 @@ try:
     time.sleep(1)
     os.system("python3 _wsp.py --celular="+cel+ " -rc "+rec_str+" -rs "+res_str)
 
-    removeConnection(internetRed)
+    time.sleep(1)
+    removeXmls()
 
 except Exception as e:
+
+    time.sleep(1)
+    removeXmls()
+    
     sys.exit("Ocurrió un error inesperado al enviar mensaje a whatsapp")
 
 sys.exit()
