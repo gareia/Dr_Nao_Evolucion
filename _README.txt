@@ -11,7 +11,7 @@ REQUISITOS: (Guiarse de _ejemploPath.png)
 FUNCIONAMIENTO:
 1.Cambiar credenciales de internet en _redInternetId.txt y _redInternetPass.txt
 2.Cambiar credenciales de la red del laboratorio en _redNaoId.txt y _redNaoPass.txt
-3.Cambiar credenciales del robot en _redNaoIp.txt y _redInternetPass.txt
+3.Cambiar credenciales del robot en _redNaoIp.txt y _redInternetPort.txt
 4.Cambiar urls de azure api en _azureApi.py
 5.Cambiar path a la carpeta user data de Chrome en _chromeUserData.txt
 6.Asegurarse que las redes estén disponibles
