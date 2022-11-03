@@ -36,9 +36,6 @@ def main(session):
         #motion_service.angleInterpolation(names, [-3.0, 1.2, -0.7], times, True)
         #motion_service.angleInterpolation(names, [-1.0, 1.2, -0.7], times, True)
 
-    
-    sys.exit()
-
 
 try:
     session = qi.Session()
@@ -61,3 +58,5 @@ except RuntimeError:
     raise Exception("No se puede conectar a Naoqi con ip \"" + naoIp + "\" y puerto" + str(naoPort))
 except Exception:
     raise Exception("Ocurrió un error inesperado al conectar con Nao")
+
+sys.exit()

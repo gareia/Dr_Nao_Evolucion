@@ -15,14 +15,14 @@ def removeXmls():
                 print("Xml removido: " + xml)
 
     except Exception:
-        raise Exception("Ocurrió un error al momento de eliminar los archivos .xml")
+        raise Exception("Ocurrió un error al momento de eliminar los archivos .xml. Archivo main.py")
 
 try:
     
     removeXmls()
 
     #Entorno CON NAO
-    from _flujo import fcelular, fresultados, frecomendacion
+    from _flujoAux import fcelular, fresultados, frecomendacion
 
     #Entorno SIN NAO
     #from _simulacionNao import fcelular, fresultados, frecomendacion
@@ -90,6 +90,6 @@ except Exception as e:
     time.sleep(1)
     removeXmls()
     
-    sys.exit("Ocurrió un error inesperado al enviar mensaje a whatsapp")
+    sys.exit("Ocurrió un error inesperado al enviar mensaje a whatsapp. Archivo main.py o wsp.py")
 
 sys.exit()
