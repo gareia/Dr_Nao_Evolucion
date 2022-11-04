@@ -187,8 +187,8 @@ def ejecutar():
     for d1 in range(nummax_digito):
         for d2 in range(nummax_digito):
             digitos.append(str(d1)+" "+str(d2))
-            for d3 in range(nummax_digito):
-                digitos.append(str(d1)+" "+str(d2)+" "+str(d3))
+            #for d3 in range(nummax_digito):
+                #digitos.append(str(d1)+" "+str(d2)+" "+str(d3))
 
     print("len(edades): "+str(len(edades)))
     print("len(digitos): "+str(len(digitos)))
